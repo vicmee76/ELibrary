@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ELibrary.Core.Interfaces
 {
-    public interface IGutendexService
+    public interface ILibraryService
     {
         Task<Response<SearchBookResponse>> SearchBooks(int? page, string searchText);
         Task<Response<SearchBookResponse>> SearchBooksByTopic(int? page, string topic);

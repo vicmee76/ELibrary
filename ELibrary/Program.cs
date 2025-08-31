@@ -20,7 +20,7 @@ namespace ELibrary
 
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
             builder.Services.AddScoped<IApiClient, ApiClient>();
-            builder.Services.AddScoped<IGutendexService, GutendexService>();
+            builder.Services.AddScoped<ILibraryService, GutendexService>();
 
             var app = builder.Build();
 

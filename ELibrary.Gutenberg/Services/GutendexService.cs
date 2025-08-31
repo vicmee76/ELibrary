@@ -126,8 +126,8 @@ namespace ELibrary.Infrastruture.Services
                     new SearchBookResponse
                     {
                         Count = books.count,
-                        NextPageUrl = books.next != null ? eLibraryBaseUrl + $"Search?Page={page + 1}&SearchText={searchText}" : null,
-                        PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"Search?Page={page - 1}&SearchText={searchText}" : null,
+                        NextPageUrl = books.next != null ? eLibraryBaseUrl + $"/Search?Page={page + 1}&SearchText={searchText}" : null,
+                        PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"/Search?Page={page - 1}&SearchText={searchText}" : null,
                         Data = books.results.Select(b => new Data
                         {
                             Id = b.id,

@@ -35,10 +35,15 @@ namespace ELibrary.Core.Helpers
         {
             try
             {
-                _httpClient.BaseAddress = new Uri(url);
-                var resp = await _httpClient.GetAsync(string.Empty);
+                //_httpClient.BaseAddress = new Uri(url);
+                var resp = await _httpClient.GetAsync(url);
                 resp.EnsureSuccessStatusCode();
+
                 var responseString = await resp.Content.ReadAsStringAsync();
+                if (responseString.Contains("DOCTYPE"))
+                {
+                    return (T)(object)responseString;
+                }
                 return DeserializeObject<T>(responseString);
             }
             catch (Exception e)

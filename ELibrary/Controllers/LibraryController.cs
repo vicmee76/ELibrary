@@ -1,10 +1,12 @@
 using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using ELibrary.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ELibrary.Controllers
 {
+    [Authorize]
     [ApiController]
     [Route("[controller]/[action]")]
     public class LibraryController : ControllerBase

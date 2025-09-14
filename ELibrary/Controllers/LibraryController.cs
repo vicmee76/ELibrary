@@ -13,8 +13,8 @@ namespace ELibrary.Controllers
     {
        
         private readonly ILogger<LibraryController> _logger;
-        private readonly ILibraryService _libraryService;
-        public LibraryController(ILogger<LibraryController> logger, ILibraryService libraryService)
+        private readonly IGutendexService _libraryService;
+        public LibraryController(ILogger<LibraryController> logger, IGutendexService libraryService)
         {
             _logger = logger;
             _libraryService = libraryService;

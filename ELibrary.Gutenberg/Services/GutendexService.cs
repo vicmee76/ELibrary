@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace ELibrary.Infrastruture.Services
 {
-    public class GutendexService : ILibraryService
+    public class GutendexService : IGutendexService
     {
         private readonly IApiClient _client;
         private readonly IConfiguration _config;

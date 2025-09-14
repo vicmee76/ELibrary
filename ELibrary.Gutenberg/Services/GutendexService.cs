@@ -28,18 +28,18 @@ namespace ELibrary.Infrastruture.Services
         {
             try
             {
-                var gutendexBaseUrl = _config.GetValue<string>("Gutendex:BaseUrl");
+                var gutendexBaseUrl = _config.GetValue<string>("Gutendex:BaseUrlForBooksById");
 
                 // Gutendex single book endpoint
-                var url = gutendexBaseUrl + $"?ids={id}";
-                var book = await _client.GetAsync<GutendexBookResponse>(url);
+                //var url = gutendexBaseUrl + $"?ids={id}";
+                //var book = await _client.GetAsync<GutendexBookResponse>(url);
 
-                if (book.results == null || book.results.FirstOrDefault().formats == null || string.IsNullOrEmpty(book.results.FirstOrDefault().formats.texthtml))
-                {
-                    return new Response<string>(null, $"Book content not found for book {id}", false);
-                }
+                //if (book.results == null || book.results.FirstOrDefault().formats == null || string.IsNullOrEmpty(book.results.FirstOrDefault().formats.texthtml))
+                //{
+                //    return new Response<string>(null, $"Book content not found for book {id}", false);
+                //}
 
-                var bookHtml = await _client.GetAsync<string>(book.results.FirstOrDefault().formats.texthtml);
+                var bookHtml = await _client.GetAsync<string>(gutendexBaseUrl + $"{id}/pg{id}-images.html");
 
                 if (string.IsNullOrEmpty(bookHtml))
                 {
@@ -77,7 +77,7 @@ namespace ELibrary.Infrastruture.Services
                     Title = book.results.FirstOrDefault().title,
                     Authors = book.results.FirstOrDefault().authors?.Select(a => a.name).ToList() ?? new List<string>(),
                     Summary = book.results.FirstOrDefault().summaries?.FirstOrDefault() ?? "No Summary Available",
-                    ImageUrl = $"{eLibraryBaseUrl}/api/v1/Books/Image?id={book.results.FirstOrDefault().id}"
+                    ImageUrl = eLibraryBaseUrl + $"/Image/{book.results.FirstOrDefault().id}"
                 };
 
                 return new Response<BookSummary>(summary, "Book summary retrieved successfully", true);
@@ -126,15 +126,15 @@ namespace ELibrary.Infrastruture.Services
                     new SearchBookResponse
                     {
                         Count = books.count,
-                        NextPageUrl = books.next != null ? eLibraryBaseUrl + $"/api/v1/Books/SearchBooks?page={page + 1}&searchText={searchText}" : null,
-                        PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"/api/v1/Books/SearchBooks?page={page - 1}&searchText={searchText}" : null,
+                        NextPageUrl = books.next != null ? eLibraryBaseUrl + $"/Search?Page={page + 1}&SearchText={searchText}" : null,
+                        PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"/Search?Page={page - 1}&SearchText={searchText}" : null,
                         Data = books.results.Select(b => new Data
                         {
                             Id = b.id,
                             Title = b.title,
                             Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),
-                            Summary = b.summaries != null ? b.summaries.First() : "No Summary Available",
-                            ImageUrl = eLibraryBaseUrl + $"/api/v1/Books/Image?id={b.id}"
+                            Summary = b.summaries != null ? b.summaries?.FirstOrDefault() : "No Summary Available",
+                            ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}"
                         }).ToList()
                     },
                     "Books retrieved successfully",
@@ -161,15 +161,15 @@ namespace ELibrary.Infrastruture.Services
                     new SearchBookResponse
                     {
                         Count = books.count,
-                        NextPageUrl = books.next != null ? eLibraryBaseUrl + $"/api/v1/Books/SearchBooksByTopic?page={page + 1}&topic={topic}" : null,
-                        PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"/api/v1/Books/SearchBooksByTopic?page={page - 1}&topic={topic}" : null,
+                        NextPageUrl = books.next != null ? eLibraryBaseUrl + $"/SearchTopic?Page={page + 1}&Topic={topic}" : null,
+                        PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"/SearchTopic?Page={page - 1}&Topic={topic}" : null,
                         Data = books.results.Select(b => new Data
                         {
                             Id = b.id,
                             Title = b.title,
                             Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),
-                            Summary = b.summaries != null ? b.summaries.First() : "No Summary Available",
-                            ImageUrl = eLibraryBaseUrl + $"/api/v1/Books/Image?id={b.id}"
+                            Summary = b.summaries != null ? b.summaries?.FirstOrDefault() : "No Summary Available",
+                            ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}"
                         }).ToList()
                     },
                     "Books retrieved successfully",

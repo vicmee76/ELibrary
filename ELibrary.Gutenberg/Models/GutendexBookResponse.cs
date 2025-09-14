@@ -44,8 +44,8 @@ namespace ELibrary.Infrastruture.Models
     public class Author
     {
         public string name { get; set; }
-        public int birth_year { get; set; }
-        public int death_year { get; set; }
+        public int? birth_year { get; set; }
+        public int? death_year { get; set; }
     }
 
 }

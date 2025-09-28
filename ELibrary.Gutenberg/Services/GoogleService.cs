@@ -1,4 +1,5 @@
-﻿using ELibrary.Core.Helpers;
+﻿using ELibrary.Core.Enums;
+using ELibrary.Core.Helpers;
 using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using ELibrary.Gutenberg.Models;
@@ -17,10 +18,11 @@ using static System.Reflection.Metadata.BlobBuilder;
 
 namespace ELibrary.Gutenberg.Services
 {
-    public class GoogleService : IGoogleService
+    public class GoogleService : ILibraryService
     {
         private readonly IApiClient _client;
         private readonly IConfiguration _config;
+        public BookSource BOOK_SOURCE => BookSource.Google;
 
         public GoogleService(IApiClient client, IConfiguration config)
         {
@@ -173,7 +175,9 @@ namespace ELibrary.Gutenberg.Services
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
                             Summary = TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
-                            ImageUrl = eLibraryBaseUrl + $"/Image/{ConvertGoogleIdToLong(b.id)}"
+                            ImageUrl = eLibraryBaseUrl + $"/Image/{ConvertGoogleIdToLong(b.id)}",
+                            Source = BOOK_SOURCE
+
                         }).ToList() ?? new List<Data>()
                     },
                     "Books retrieved successfully",
@@ -215,13 +219,16 @@ namespace ELibrary.Gutenberg.Services
                         Count = books?.items?.Count(x => x.accessInfo.Embeddable && string.Equals(x.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)) ?? 0,
                         NextPageUrl = currentPage < totalPages ? eLibraryBaseUrl + $"/SearchTopic?Page={currentPage + 1}&Topic={topic}" : null,
                         PreviousPageUrl = currentPage > 1 ? eLibraryBaseUrl + $"/SearchTopic?Page={currentPage - 1}&Topic={topic}" : null,
+                      
                         Data = books?.items?.Where(b => b.accessInfo.Embeddable && string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)).Select(b => new Data
                         {
                             Id = ConvertGoogleIdToLong(b.id),
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
                             Summary = TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
-                            ImageUrl = eLibraryBaseUrl + $"/Image/{ConvertGoogleIdToLong(b.id)}"
+                            ImageUrl = eLibraryBaseUrl + $"/Image/{ConvertGoogleIdToLong(b.id)}",
+                            Source = BOOK_SOURCE
+
                         }).ToList() ?? new List<Data>()
                     },
                     "Books retrieved successfully",

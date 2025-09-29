@@ -12,8 +12,8 @@ namespace ELibrary.Core.Interfaces
     {
         Task<Response<SearchBookResponse>> SearchBooks(int? page, string searchText);
         Task<Response<SearchBookResponse>> SearchBooksByTopic(int? page, string topic);
-        Task<Response<BookSummary>> GetBookSummaryById(long id);
-        Task<Response<string>> GetBookById(long id);
-        Task<Response<FileContentResult>> GetImageById(long id);
+        Task<Response<BookSummary>> GetBookSummaryById(string id);
+        Task<Response<string>> GetBookById(string id);
+        Task<Response<FileContentResult>> GetImageById(string id);
     }
 }

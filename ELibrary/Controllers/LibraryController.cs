@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ELibrary.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("[controller]/[action]")]
     public class LibraryController : ControllerBase
@@ -61,7 +61,7 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "summary")]
-        public async Task<ActionResult<BookSummary>> Summary(int id)
+        public async Task<ActionResult<BookSummary>> Summary(string id)
         {
             try
             {
@@ -81,7 +81,7 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "book")]
-        public async Task<ActionResult<string>> Book(int id)
+        public async Task<ActionResult<string>> Book(string id)
         {
             try
             {
@@ -101,7 +101,7 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "image")]
-        public async Task<ActionResult> Image(int id)
+        public async Task<ActionResult> Image(string id)
         {
             try
             {

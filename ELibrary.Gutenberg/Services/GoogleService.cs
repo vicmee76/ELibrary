@@ -28,15 +28,14 @@ namespace ELibrary.Gutenberg.Services
             _config = config;
         }
 
-        public async Task<Response<string>> GetBookById(long id)
+        public async Task<Response<string>> GetBookById(string id)
         {
             try
             {
                 var googleBooksBaseUrl = _config.GetValue<string>("GoogleBooks:BaseUrl");
                 var apiKey = _config.GetValue<string>("GoogleBooks:ApiKey");
 
-                var volumeId = id.ToString();
-                var url = googleBooksBaseUrl + $"/volumes/{volumeId}";
+                var url = googleBooksBaseUrl + $"/volumes/{id}";
 
                 if (!string.IsNullOrEmpty(apiKey))
                 {
@@ -60,7 +59,7 @@ namespace ELibrary.Gutenberg.Services
             }
         }
 
-        public async Task<Response<BookSummary>> GetBookSummaryById(long id)
+        public async Task<Response<BookSummary>> GetBookSummaryById(string id)
         {
             try
             {
@@ -68,8 +67,7 @@ namespace ELibrary.Gutenberg.Services
                 var apiKey = _config.GetValue<string>("GoogleBooks:ApiKey");
                 var eLibraryBaseUrl = _config.GetValue<string>("ElibraryBaseUrl");
 
-                var volumeId = id.ToString();
-                var url = googleBooksBaseUrl + $"/volumes/{volumeId}";
+                var url = googleBooksBaseUrl + $"/volumes/{id}";
 
                 if (!string.IsNullOrEmpty(apiKey))
                 {
@@ -100,15 +98,14 @@ namespace ELibrary.Gutenberg.Services
             }
         }
 
-        public async Task<Response<FileContentResult>> GetImageById(long id)
+        public async Task<Response<FileContentResult>> GetImageById(string id)
         {
             try
             {
                 var googleBooksBaseUrl = _config.GetValue<string>("GoogleBooks:BaseUrl");
                 var apiKey = _config.GetValue<string>("GoogleBooks:ApiKey");
 
-                var volumeId = id.ToString();
-                var url = googleBooksBaseUrl + $"/volumes/{volumeId}";
+                var url = googleBooksBaseUrl + $"/volumes/{id}";
 
                 if (!string.IsNullOrEmpty(apiKey))
                 {
@@ -169,11 +166,11 @@ namespace ELibrary.Gutenberg.Services
                         PreviousPageUrl = currentPage > 1 ? eLibraryBaseUrl + $"/Search?Page={currentPage - 1}&SearchText={searchText}" : null,
                         Data = books?.items?.Where(b => b.accessInfo.Embeddable && string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)).Select(b => new Data
                         {
-                            Id = ConvertGoogleIdToLong(b.id),
+                            Id = b.id,
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
                             Summary = TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
-                            ImageUrl = eLibraryBaseUrl + $"/Image/{ConvertGoogleIdToLong(b.id)}"
+                            ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}"
                         }).ToList() ?? new List<Data>()
                     },
                     "Books retrieved successfully",
@@ -217,11 +214,11 @@ namespace ELibrary.Gutenberg.Services
                         PreviousPageUrl = currentPage > 1 ? eLibraryBaseUrl + $"/SearchTopic?Page={currentPage - 1}&Topic={topic}" : null,
                         Data = books?.items?.Where(b => b.accessInfo.Embeddable && string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)).Select(b => new Data
                         {
-                            Id = ConvertGoogleIdToLong(b.id),
+                            Id = b.id,
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
                             Summary = TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
-                            ImageUrl = eLibraryBaseUrl + $"/Image/{ConvertGoogleIdToLong(b.id)}"
+                            ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}"
                         }).ToList() ?? new List<Data>()
                     },
                     "Books retrieved successfully",
@@ -244,22 +241,6 @@ namespace ELibrary.Gutenberg.Services
         //    return book.accessInfo.embeddable;
         //}
 
-        private static long ConvertGoogleIdToLong(string googleId)
-        {
-            if (string.IsNullOrEmpty(googleId))
-                return 0;
-
-            // Use hash code to convert string ID to long
-            return Math.Abs(googleId.GetHashCode());
-        }
-
-        private static string ConvertLongToGoogleId(long id)
-        {
-            // In a real implementation, you'd need to store the mapping between long IDs and Google volume IDs
-            // For now, we'll assume the long ID is the hash code of the Google ID
-            // This is a simplified approach - in production, you'd need a proper mapping mechanism
-            return id.ToString();
-        }
 
         private static string GetBookViewerHtml(string volumeId, string bookTitle)
         {

@@ -24,7 +24,7 @@ namespace ELibrary.Infrastruture.Services
             _config = config;
         }
 
-        public async Task<Response<string>> GetBookById(long id)
+        public async Task<Response<string>> GetBookById(string id)
         {
             try
             {
@@ -47,6 +47,7 @@ namespace ELibrary.Infrastruture.Services
                 }
 
                 bookHtml = RemoveGutenbergBoilerplate(bookHtml);
+                bookHtml = RemoveGutenbergBoilerplate(bookHtml);
 
                 return new Response<string>(bookHtml, "Book HTML URL retrieved successfully", true);
             }
@@ -56,7 +57,7 @@ namespace ELibrary.Infrastruture.Services
             }
         }
 
-        public async Task<Response<BookSummary>> GetBookSummaryById(long id)
+        public async Task<Response<BookSummary>> GetBookSummaryById(string id)
         {
             try
             {
@@ -73,7 +74,7 @@ namespace ELibrary.Infrastruture.Services
 
                 var summary = new BookSummary
                 {
-                    Id = book.results.FirstOrDefault().id,
+                    Id = book.results.FirstOrDefault().id.ToString(),
                     Title = book.results.FirstOrDefault().title,
                     Authors = book.results.FirstOrDefault().authors?.Select(a => a.name).ToList() ?? new List<string>(),
                     Summary = book.results.FirstOrDefault().summaries?.FirstOrDefault() ?? "No Summary Available",
@@ -90,7 +91,7 @@ namespace ELibrary.Infrastruture.Services
         }
 
 
-        public async Task<Response<FileContentResult>> GetImageById(long id)
+        public async Task<Response<FileContentResult>> GetImageById(string id)
         {
             try
             {
@@ -130,7 +131,7 @@ namespace ELibrary.Infrastruture.Services
                         PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"/Search?Page={page - 1}&SearchText={searchText}" : null,
                         Data = books.results.Select(b => new Data
                         {
-                            Id = b.id,
+                            Id = b.id.ToString(),
                             Title = b.title,
                             Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),
                             Summary = b.summaries != null ? b.summaries?.FirstOrDefault() : "No Summary Available",
@@ -165,7 +166,7 @@ namespace ELibrary.Infrastruture.Services
                         PreviousPageUrl = books.previous != null ? eLibraryBaseUrl + $"/SearchTopic?Page={page - 1}&Topic={topic}" : null,
                         Data = books.results.Select(b => new Data
                         {
-                            Id = b.id,
+                            Id = b.id.ToString(),
                             Title = b.title,
                             Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),
                             Summary = b.summaries != null ? b.summaries?.FirstOrDefault() : "No Summary Available",

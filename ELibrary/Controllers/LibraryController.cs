@@ -63,7 +63,7 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "summary")]
-        public async Task<ActionResult<BookSummary>> Summary(int id, BookSource source)
+        public async Task<ActionResult<BookSummary>> Summary(string id, BookSource source)
         {
             try
             {
@@ -83,7 +83,7 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "book")]
-        public async Task<ActionResult<string>> Book(int id, BookSource source)
+        public async Task<ActionResult<string>> Book(string id, BookSource source)
         {
             try
             {
@@ -103,7 +103,7 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "image")]
-        public async Task<ActionResult> Image(int id, BookSource source)
+        public async Task<ActionResult> Image(string id, BookSource source)
         {
             try
             {

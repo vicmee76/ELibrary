@@ -1,15 +1,12 @@
-﻿using ELibrary.Core.Models;
+﻿using ELibrary.Core.Enums;
+using ELibrary.Core.Models;
 using Microsoft.AspNetCore.Mvc;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ELibrary.Core.Interfaces
 {
-    public interface IGoogleService
+    public interface ILibraryService
     {
+        BookSource BOOK_SOURCE { get; }
         Task<Response<SearchBookResponse>> SearchBooks(int? page, string searchText);
         Task<Response<SearchBookResponse>> SearchBooksByTopic(int? page, string topic);
         Task<Response<BookSummary>> GetBookSummaryById(string id);

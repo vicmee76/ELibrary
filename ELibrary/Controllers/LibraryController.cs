@@ -1,5 +1,7 @@
+using ELibrary.Core.Enums;
 using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
+using ELibrary.Core.Services;
 using ELibrary.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -13,11 +15,11 @@ namespace ELibrary.Controllers
     {
        
         private readonly ILogger<LibraryController> _logger;
-        private readonly ILibraryService _libraryService;
-        public LibraryController(ILogger<LibraryController> logger, ILibraryService libraryService)
+        private readonly LibraryCoordinator _libraryCoordinator;
+        public LibraryController(ILogger<LibraryController> logger, LibraryCoordinator libraryCoordinator)
         {
             _logger = logger;
-            _libraryService = libraryService;
+            _libraryCoordinator = libraryCoordinator;
         }
 
         [HttpGet(Name = "search")]
@@ -25,7 +27,7 @@ namespace ELibrary.Controllers
         {
             try
             {
-                var resp = await _libraryService.SearchBooks(request.Page, request.SearchText);
+                var resp = await _libraryCoordinator.SearchBooks(request.Page, request.SearchText);
                 if (resp.Success)
                 {
                     return resp.Data;
@@ -45,7 +47,7 @@ namespace ELibrary.Controllers
         {
             try
             {
-                var resp = await _libraryService.SearchBooksByTopic(request.Page, request.Topic);
+                var resp = await _libraryCoordinator.SearchBooksByTopic(request.Page, request.Topic);
                 if (resp.Success)
                 {
                     return resp.Data;
@@ -61,11 +63,11 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "summary")]
-        public async Task<ActionResult<BookSummary>> Summary(int id)
+        public async Task<ActionResult<BookSummary>> Summary(int id, BookSource source)
         {
             try
             {
-                var resp = await _libraryService.GetBookSummaryById(id);
+                var resp = await _libraryCoordinator.GetBookSummaryById(source, id);
                 if (resp.Success)
                 {
                     return resp.Data;
@@ -81,11 +83,11 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "book")]
-        public async Task<ActionResult<string>> Book(int id)
+        public async Task<ActionResult<string>> Book(int id, BookSource source)
         {
             try
             {
-                var resp = await _libraryService.GetBookById(id);
+                var resp = await _libraryCoordinator.GetBookById(source, id);
                 if (resp.Success)
                 {
                     return resp.Data;
@@ -101,11 +103,11 @@ namespace ELibrary.Controllers
             }
         }
         [HttpGet("{id}",Name = "image")]
-        public async Task<ActionResult> Image(int id)
+        public async Task<ActionResult> Image(int id, BookSource source)
         {
             try
             {
-                var resp = await _libraryService.GetImageById(id);
+                var resp = await _libraryCoordinator.GetImageById(source, id);
                 if (resp.Success)
                 {
                     return resp.Data;

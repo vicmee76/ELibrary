@@ -1,4 +1,5 @@
-﻿using ELibrary.Core.Helpers;
+﻿using ELibrary.Core.Enums;
+using ELibrary.Core.Helpers;
 using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using ELibrary.Infrastruture.Models;
@@ -17,6 +18,7 @@ namespace ELibrary.Infrastruture.Services
     {
         private readonly IApiClient _client;
         private readonly IConfiguration _config;
+        public BookSource BOOK_SOURCE => BookSource.Gutenberg;
 
         public GutendexService(IApiClient client, IConfiguration config)
         {
@@ -132,7 +134,8 @@ namespace ELibrary.Infrastruture.Services
                         {
                             Id = b.id,
                             Title = b.title,
-                            Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),
+                            Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),                         
+                            Source = BOOK_SOURCE,
                             Summary = b.summaries != null ? b.summaries?.FirstOrDefault() : "No Summary Available",
                             ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}"
                         }).ToList()
@@ -167,7 +170,8 @@ namespace ELibrary.Infrastruture.Services
                         {
                             Id = b.id,
                             Title = b.title,
-                            Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),
+                            Authors = b.authors != null ? b.authors.Select(a => a.name).ToList() : new List<string>(),                        
+                            Source = BOOK_SOURCE,
                             Summary = b.summaries != null ? b.summaries?.FirstOrDefault() : "No Summary Available",
                             ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}"
                         }).ToList()

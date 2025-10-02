@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ELibrary.Core\ELibrary.Core.csproj" />
-    <ProjectReference Include="..\ELibrary.Gutenberg\ELibrary.Gutenberg.csproj" />
+    <ProjectReference Include="..\ELibrary.Gutenberg\ELibrary.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

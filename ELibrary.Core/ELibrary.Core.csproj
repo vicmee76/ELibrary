@@ -13,8 +13,6 @@
   
   <ItemGroup>
     <Folder Include="Dtos\" />
-    <Folder Include="Contracts\" />
-    <Folder Include="Services\" />
   </ItemGroup>
 
 </Project>

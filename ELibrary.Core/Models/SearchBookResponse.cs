@@ -1,4 +1,6 @@
-﻿namespace ELibrary.Core.Models
+﻿using ELibrary.Core.Enums;
+
+namespace ELibrary.Core.Models
 {
     public class SearchBookResponse
     {
@@ -16,5 +18,6 @@
         public List<string> Authors { get; set; }
         public string Summary { get; set; }
         public string ImageUrl { get; set; }
+        public BookSource Source { get; set; }
     }
 }

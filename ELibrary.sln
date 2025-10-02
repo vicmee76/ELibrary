@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELibrary", "ELibrary\ELibra
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELibrary.Core", "ELibrary.Core\ELibrary.Core.csproj", "{4F7E324F-D744-44D8-8658-280C69748BD7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELibrary.Gutenberg", "ELibrary.Gutenberg\ELibrary.Gutenberg.csproj", "{F1443868-A9A9-7EFF-847E-029628B7165F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ELibrary.Infrastructure", "ELibrary.Gutenberg\ELibrary.Infrastructure.csproj", "{F1443868-A9A9-7EFF-847E-029628B7165F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

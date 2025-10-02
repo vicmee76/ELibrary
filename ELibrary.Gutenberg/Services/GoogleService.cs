@@ -171,7 +171,7 @@ namespace ELibrary.Gutenberg.Services
                             Id = b.id,
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
-                            Summary = TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
+                            Summary = TruncateText(b.volumeInfo?.subtitle, 200) ?? "No Summary Available",
                             ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}",
                             Source = BOOK_SOURCE
                         }).ToList() ?? new List<Data>()

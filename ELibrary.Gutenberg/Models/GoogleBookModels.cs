@@ -48,6 +48,9 @@ namespace ELibrary.Gutenberg.Models
 
         [JsonPropertyName("infoLink")]
         public string? infoLink { get; set; }
+
+        [JsonPropertyName("subtitle")]
+        public string? subtitle { get; set; }
     }
 
     public class ImageLinks

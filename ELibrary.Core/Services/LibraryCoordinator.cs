@@ -63,15 +63,15 @@ namespace ELibrary.Core.Services
             var results = await Task.WhenAll(tasks);
             return CombineResultsFromMultipleSources(results);
         }
-        public async Task<Response<BookSummary>> GetBookSummaryById(BookSource source, long id)
+        public async Task<Response<BookSummary>> GetBookSummaryById(BookSource source, string id)
         {
             return await _libraryServices.First(s => s.BOOK_SOURCE == source).GetBookSummaryById(id);
         }
-        public async Task<Response<string>> GetBookById(BookSource source, long id)
+        public async Task<Response<string>> GetBookById(BookSource source, string id)
         {
             return await _libraryServices.First(s => s.BOOK_SOURCE == source).GetBookById(id);
         }
-        public async Task<Response<FileContentResult>> GetImageById(BookSource source, long id)
+        public async Task<Response<FileContentResult>> GetImageById(BookSource source, string id)
         {
             return await _libraryServices.First(s => s.BOOK_SOURCE == source).GetImageById(id);
         }

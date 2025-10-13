@@ -22,12 +22,14 @@ namespace ELibrary.Gutenberg.Services
     {
         private readonly IApiClient _client;
         private readonly IConfiguration _config;
+        private readonly ILogger<GoogleService> _logger;
         public BookSource BOOK_SOURCE => BookSource.Google;
 
-        public GoogleService(IApiClient client, IConfiguration config)
+        public GoogleService(IApiClient client, IConfiguration config, ILogger<GoogleService> logger)
         {
             _client = client;
             _config = config;
+            _logger = logger;
         }
 
         public async Task<Response<string>> GetBookById(string id)
@@ -147,13 +149,17 @@ namespace ELibrary.Gutenberg.Services
                 var eLibraryBaseUrl = _config.GetValue<string>("ElibraryBaseUrl");
                 var maxResults = _config.GetValue<int>("GoogleBooks:MaxResults", 10);
 
+
                 var startIndex = ((page ?? 1) - 1) * maxResults;
+                if (startIndex < 0) startIndex = 0;
                 var url = googleBooksBaseUrl + $"/volumes?q={Uri.EscapeDataString(searchText)}&startIndex={startIndex}&maxResults={maxResults}&filter=ebooks";
 
                 if (!string.IsNullOrEmpty(apiKey))
                 {
                     url += $"&key={apiKey}";
                 }
+
+                _logger.LogInformation("Google Books API URL: {Url}", url);
 
                 var books = await _client.GetAsync<GoogleBooksResponse>(url);
 
@@ -183,6 +189,7 @@ namespace ELibrary.Gutenberg.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "[FATAL ERROR] SearchBooks failed for search: {SearchText}", searchText);
                 return new Response<SearchBookResponse>(null, "An error occurred getting books", false);
             }
         }
@@ -196,13 +203,17 @@ namespace ELibrary.Gutenberg.Services
                 var eLibraryBaseUrl = _config.GetValue<string>("ElibraryBaseUrl");
                 var maxResults = _config.GetValue<int>("GoogleBooks:MaxResults", 10);
 
+
                 var startIndex = ((page ?? 1) - 1) * maxResults;
+                if (startIndex < 0) startIndex = 0;
                 var url = googleBooksBaseUrl + $"/volumes?q=subject:{Uri.EscapeDataString(topic)}&startIndex={startIndex}&maxResults={maxResults}&filter=ebooks";
 
                 if (!string.IsNullOrEmpty(apiKey))
                 {
                     url += $"&key={apiKey}";
                 }
+
+                _logger.LogInformation("Google Books API URL: {Url}", url);
 
                 var books = await _client.GetAsync<GoogleBooksResponse>(url);
 
@@ -233,6 +244,7 @@ namespace ELibrary.Gutenberg.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "[FATAL ERROR] SearchBooks failed for topic: {Topic}", topic);
                 return new Response<SearchBookResponse>(null, "An error occurred getting books", false);
             }
         }

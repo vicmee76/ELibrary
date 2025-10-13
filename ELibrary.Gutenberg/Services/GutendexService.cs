@@ -18,12 +18,14 @@ namespace ELibrary.Infrastruture.Services
     {
         private readonly IApiClient _client;
         private readonly IConfiguration _config;
+        private readonly ILogger<GutendexService> _logger;
         public BookSource BOOK_SOURCE => BookSource.Gutenberg;
 
-        public GutendexService(IApiClient client, IConfiguration config)
+        public GutendexService(IApiClient client, IConfiguration config, ILogger<GutendexService> logger)
         {
             _client = client;
             _config = config;
+            _logger = logger;
         }
 
         public async Task<Response<string>> GetBookById(string id)
@@ -148,6 +150,7 @@ namespace ELibrary.Infrastruture.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "[FATAL ERROR] SearchBooks failed for search: {SearchText}", searchText);
                 return new Response<SearchBookResponse>(null, "An error occurred getting books", false);
             }
             
@@ -184,6 +187,7 @@ namespace ELibrary.Infrastruture.Services
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "[FATAL ERROR] SearchBooks failed for topic: {Topic}", topic);
                 return new Response<SearchBookResponse>(null, "An error occurred getting books", false);
             }
 

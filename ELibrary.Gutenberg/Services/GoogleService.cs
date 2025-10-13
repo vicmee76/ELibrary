@@ -159,7 +159,7 @@ namespace ELibrary.Gutenberg.Services
                     url += $"&key={apiKey}";
                 }
 
-                _logger.LogInformation("Google Books API URL: {Url}", url);
+                // _logger.LogInformation("Google Books API URL: {Url}", url);
 
                 var books = await _client.GetAsync<GoogleBooksResponse>(url);
 
@@ -213,7 +213,7 @@ namespace ELibrary.Gutenberg.Services
                     url += $"&key={apiKey}";
                 }
 
-                _logger.LogInformation("Google Books API URL: {Url}", url);
+                // _logger.LogInformation("Google Books API URL: {Url}", url);
 
                 var books = await _client.GetAsync<GoogleBooksResponse>(url);
 

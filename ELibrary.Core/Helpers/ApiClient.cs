@@ -35,11 +35,13 @@ namespace ELibrary.Core.Helpers
         {
             try
             {
-                //_httpClient.BaseAddress = new Uri(url);
                 var resp = await _httpClient.GetAsync(url);
-                resp.EnsureSuccessStatusCode();
-
                 var responseString = await resp.Content.ReadAsStringAsync();
+                if (!resp.IsSuccessStatusCode)
+                {
+                    // Log or throw with the response body for debugging
+                    throw new Exception($"Response status code does not indicate success: {(int)resp.StatusCode} ({resp.ReasonPhrase}). Body: {responseString}");
+                }
                 if (responseString.Contains("DOCTYPE"))
                 {
                     return (T)(object)responseString;
@@ -50,7 +52,6 @@ namespace ELibrary.Core.Helpers
             {
                 throw new Exception(e.Message);
             }
-
         }
 
         public async Task<T> PostAsync<T>(string url, object data, Dictionary<string, string> headers = null)

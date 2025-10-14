@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ELibrary.Controllers
 {
-    [Authorize]
+    //[Authorize]
     [ApiController]
     [Route("[controller]/[action]")]
     public class LibraryController : ControllerBase
@@ -70,6 +70,7 @@ namespace ELibrary.Controllers
                 var resp = await _libraryCoordinator.GetBookSummaryById(source, id);
                 if (resp.Success)
                 {
+                    resp.Data.Source = source;
                     return resp.Data;
                 }
                 else

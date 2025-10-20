@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ELibrary.Controllers
 {
-    //[Authorize]
+    [Authorize]
     [ApiController]
     [Route("[controller]/[action]")]
     public class LibraryController : ControllerBase
@@ -30,7 +30,7 @@ namespace ELibrary.Controllers
                 var resp = await _libraryCoordinator.SearchBooks(request.Page, request.SearchText);
                 if (resp.Success)
                 {
-                    return resp.Data;
+                    return resp.Data;   
                 }
                 else
                 {

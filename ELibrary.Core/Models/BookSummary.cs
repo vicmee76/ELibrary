@@ -10,5 +10,6 @@ namespace ELibrary.Core.Models
         public string Summary { get; set; }
         public string ImageUrl { get; set; }
         public BookSource Source { get; set; }
+        public bool IsPartial { get; set; }
     }
 }

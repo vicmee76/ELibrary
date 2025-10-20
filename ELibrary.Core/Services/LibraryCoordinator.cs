@@ -33,7 +33,7 @@ namespace ELibrary.Core.Services
                new SearchBookResponse
                {
                    Count = results.Where(s => s.Success).Sum(r => r.Data?.Count ?? 0),
-                   Data = RemoveDuplicates(results.Where(r => r.Success).SelectMany(r => r.Data?.Data ?? new List<Data>()).ToList())
+                   Data = RemoveDuplicates(results.Where(r => r.Success).SelectMany(r => r.Data?.Data ?? new List<Data>()).OrderByDescending(x => x.Source).ToList())
                },
                 results.Any(x => x.Success) ? "Books retrieved successfully from multiple sources" : string.Join(',', results.Where(s => !string.IsNullOrEmpty(s.Message)).Select(s => s.Message) ?? []),
                results.Any(x => x.Success));

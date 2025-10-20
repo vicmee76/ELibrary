@@ -48,7 +48,7 @@ namespace ELibrary.Gutenberg.Services
 
                 var book = await _client.GetAsync<GoogleBookItem>(url);
 
-                if (book == null || !book.accessInfo.Embeddable || !string.Equals(book.accessInfo?.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase))
+                if (book == null || !book.accessInfo.Embeddable /*|| !string.Equals(book.accessInfo?.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)*/)
                 {
                     return new Response<string>(null, $"Book content not found for book {id}", false);
                 }
@@ -91,7 +91,8 @@ namespace ELibrary.Gutenberg.Services
                     Title = book.volumeInfo.title ?? "Unknown Title",
                     Authors = book.volumeInfo.authors ?? new List<string>(),
                     Summary = TruncateText(book.volumeInfo.description, 200) ?? "No Summary Available",
-                    ImageUrl = eLibraryBaseUrl + $"/Image/{id}"
+                    ImageUrl = eLibraryBaseUrl + $"/Image/{id}",
+                    IsPartial = !string.Equals(book.accessInfo?.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase),
                 };
 
                 return new Response<BookSummary>(summary, "Book summary retrieved successfully", true);
@@ -140,7 +141,7 @@ namespace ELibrary.Gutenberg.Services
             }
         }
 
-        public async Task<Response<SearchBookResponse>> SearchBooks(int? page, string searchText)
+        public async Task<Response<SearchBookResponse>> SearchBooks(int? page, string searchText)   
         {
             try
             {
@@ -169,17 +170,18 @@ namespace ELibrary.Gutenberg.Services
                 var response = new Response<SearchBookResponse>(
                     new SearchBookResponse
                     {
-                        Count = books?.items?.Count(x => x.accessInfo.Embeddable && string.Equals( x.accessInfo.Viewability, "ALL_PAGES",StringComparison.OrdinalIgnoreCase)) ?? 0,
+                        Count = books?.items?.Count(x => x.accessInfo.Embeddable /*&& string.Equals( x.accessInfo.Viewability, "ALL_PAGES",StringComparison.OrdinalIgnoreCase)*/) ?? 0,
                         NextPageUrl = currentPage < totalPages ? eLibraryBaseUrl + $"/Search?Page={currentPage + 1}&SearchText={searchText}" : null,
                         PreviousPageUrl = currentPage > 1 ? eLibraryBaseUrl + $"/Search?Page={currentPage - 1}&SearchText={searchText}" : null,
-                        Data = books?.items?.Where(b => b.accessInfo.Embeddable && string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)).Select(b => new Data
+                        Data = books?.items?.Where(b => b.accessInfo.Embeddable /*&& string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)*/).Select(b => new Data
                         {
                             Id = b.id,
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
                             Summary = TruncateText(b.volumeInfo?.subtitle, 200) ?? "No Summary Available",
                             ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}",
-                            Source = BOOK_SOURCE
+                            Source = BOOK_SOURCE,
+                            IsPartial = !string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)
                         }).ToList() ?? new List<Data>()
                     },
                     "Books retrieved successfully",
@@ -223,18 +225,19 @@ namespace ELibrary.Gutenberg.Services
                 var response = new Response<SearchBookResponse>(
                     new SearchBookResponse
                     {
-                        Count = books?.items?.Count(x => x.accessInfo.Embeddable && string.Equals(x.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)) ?? 0,
+                        Count = books?.items?.Count(x => x.accessInfo.Embeddable /*&& string.Equals(x.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)*/) ?? 0,
                         NextPageUrl = currentPage < totalPages ? eLibraryBaseUrl + $"/SearchTopic?Page={currentPage + 1}&Topic={topic}" : null,
                         PreviousPageUrl = currentPage > 1 ? eLibraryBaseUrl + $"/SearchTopic?Page={currentPage - 1}&Topic={topic}" : null,
                       
-                        Data = books?.items?.Where(b => b.accessInfo.Embeddable && string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)).Select(b => new Data
+                        Data = books?.items?.Where(b => b.accessInfo.Embeddable /*&& string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)*/).Select(b => new Data
                         {
                             Id = b.id,
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
                             Summary = TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
                             ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}",
-                            Source = BOOK_SOURCE
+                            Source = BOOK_SOURCE,
+                            IsPartial = !string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)
                         }).ToList() ?? new List<Data>()
                     },
                     "Books retrieved successfully",

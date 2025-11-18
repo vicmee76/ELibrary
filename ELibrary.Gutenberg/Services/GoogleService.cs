@@ -281,6 +281,22 @@ namespace ELibrary.Gutenberg.Services
         }
         google.books.setOnLoadCallback(initialize);
     </script>
+    <style>
+   #viewerCanvas>div {
+       border: none !important;
+       box-shadow: none !important;
+   }
+   #viewerCanvas>div>div:nth-last-child(1) {
+       display: none;
+   }
+   #viewerCanvas>div>div:nth-child(1)>div:nth-child(2) {
+       display: none;
+   }
+   /* #viewerCanvas>div>div:nth-child(1)>div:nth-child(1) {
+       width: 100% !important;
+       height: 100vh !important;
+   } */
+</style>
 </head>
 <body>
     <div id=""viewerCanvas"" style=""width: 100%; min-height: 100%""></div>

@@ -11,5 +11,7 @@ namespace ELibrary.Core.Models
         public string ImageUrl { get; set; }
         public BookSource Source { get; set; }
         public bool IsPartial { get; set; }
+        
+        public string? viewLink { get; set; } = String.Empty;
     }
 }

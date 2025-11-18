@@ -2,7 +2,6 @@
 using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using static ELibrary.Core.Helpers.Util;
 
 namespace ELibrary.Core.Services
@@ -10,10 +9,15 @@ namespace ELibrary.Core.Services
     public class LibraryCoordinator
     {
         private readonly IEnumerable<ILibraryService> _libraryServices;
+
+
         public LibraryCoordinator(IEnumerable<ILibraryService> libraryServices)
         {
                 _libraryServices = libraryServices;
         }
+
+
+
         public async Task<Response<SearchBookResponse>> SearchBooks(int? page, string searchText)
         {
             var libraryProviders = _libraryServices.ToArray();
@@ -38,6 +42,8 @@ namespace ELibrary.Core.Services
                 results.Any(x => x.Success) ? "Books retrieved successfully from multiple sources" : string.Join(',', results.Where(s => !string.IsNullOrEmpty(s.Message)).Select(s => s.Message) ?? []),
                results.Any(x => x.Success));
         }
+        
+        
         private List<Data> RemoveDuplicates(List<Data> combinedData)
         {
             var uniqueData = new Dictionary<string, Data>(StringComparer.OrdinalIgnoreCase);
@@ -51,6 +57,8 @@ namespace ELibrary.Core.Services
             }
             return uniqueData.Values.ToList();
         }
+        
+        
         public async Task<Response<SearchBookResponse>> SearchBooksByTopic(int? page, string topic)
         {
             var libraryProviders = _libraryServices.ToArray();
@@ -63,14 +71,20 @@ namespace ELibrary.Core.Services
             var results = await Task.WhenAll(tasks);
             return CombineResultsFromMultipleSources(results);
         }
+        
+        
         public async Task<Response<BookSummary>> GetBookSummaryById(BookSource source, string id)
         {
             return await _libraryServices.First(s => s.BOOK_SOURCE == source).GetBookSummaryById(id);
         }
+        
+        
         public async Task<Response<string>> GetBookById(BookSource source, string id)
         {
             return await _libraryServices.First(s => s.BOOK_SOURCE == source).GetBookById(id);
         }
+        
+        
         public async Task<Response<FileContentResult>> GetImageById(BookSource source, string id)
         {
             return await _libraryServices.First(s => s.BOOK_SOURCE == source).GetImageById(id);

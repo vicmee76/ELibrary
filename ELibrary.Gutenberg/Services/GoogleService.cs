@@ -4,17 +4,8 @@ using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using ELibrary.Gutenberg.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using static System.Reflection.Metadata.BlobBuilder;
 
 namespace ELibrary.Gutenberg.Services
 {
@@ -90,7 +81,7 @@ namespace ELibrary.Gutenberg.Services
                     Id = id,
                     Title = book.volumeInfo.title ?? "Unknown Title",
                     Authors = book.volumeInfo.authors ?? new List<string>(),
-                    Summary = TruncateText(book.volumeInfo.description, 200) ?? "No Summary Available",
+                    Summary = Util.TruncateText(book.volumeInfo.description, 200) ?? "No Summary Available",
                     ImageUrl = eLibraryBaseUrl + $"/Image/{id}",
                     IsPartial = !string.Equals(book.accessInfo?.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase),
                 };
@@ -178,7 +169,7 @@ namespace ELibrary.Gutenberg.Services
                             Id = b.id,
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
-                            Summary = TruncateText(b.volumeInfo?.subtitle, 200) ?? "No Summary Available",
+                            Summary = Util.TruncateText(b.volumeInfo?.subtitle, 200) ?? "No Summary Available",
                             ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}",
                             Source = BOOK_SOURCE,
                             IsPartial = !string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)
@@ -234,7 +225,7 @@ namespace ELibrary.Gutenberg.Services
                             Id = b.id,
                             Title = b.volumeInfo?.title ?? "Unknown Title",
                             Authors = b.volumeInfo?.authors ?? new List<string>(),
-                            Summary = TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
+                            Summary = Util.TruncateText(b.volumeInfo?.description, 200) ?? "No Summary Available",
                             ImageUrl = eLibraryBaseUrl + $"/Image/{b.id}",
                             Source = BOOK_SOURCE,
                             IsPartial = !string.Equals(b.accessInfo.Viewability, "ALL_PAGES", StringComparison.OrdinalIgnoreCase)
@@ -265,43 +256,27 @@ namespace ELibrary.Gutenberg.Services
         private static string GetBookViewerHtml(string volumeId, string bookTitle)
         {
             var template = @"<!DOCTYPE html ""-//W3C//DTD XHTML 1.0 Strict//EN"" ""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">
-<html xmlns=""http://www.w3.org/1999/xhtml"">
-<head>
-    <meta http-equiv=""content-type"" content=""text/html; charset=utf-8"" />
-    <title>{{Book Title Here}}</title>
-    <script type=""text/javascript"" src=""https://www.google.com/books/jsapi.js""></script>
-    <script type=""text/javascript"">
-        google.books.load();
-        function alertNotFound() {
-            alert(""could not embed the book!"");
-        }
-        function initialize() {
-            var viewer = new google.books.DefaultViewer(document.getElementById('viewerCanvas'));
-            viewer.load('[[IDENTIFY]]', alertNotFound);
-        }
-        google.books.setOnLoadCallback(initialize);
-    </script>
-    <style>
-   #viewerCanvas>div {
-       border: none !important;
-       box-shadow: none !important;
-   }
-   #viewerCanvas>div>div:nth-last-child(1) {
-       display: none;
-   }
-   #viewerCanvas>div>div:nth-child(1)>div:nth-child(2) {
-       display: none;
-   }
-   /* #viewerCanvas>div>div:nth-child(1)>div:nth-child(1) {
-       width: 100% !important;
-       height: 100vh !important;
-   } */
-</style>
-</head>
-<body>
-    <div id=""viewerCanvas"" style=""width: 100%; min-height: 100%""></div>
-</body>
-</html>";
+            <html xmlns=""http://www.w3.org/1999/xhtml"">
+            <head>
+                <meta http-equiv=""content-type"" content=""text/html; charset=utf-8"" />
+                <title>{{Book Title Here}}</title>
+                <script type=""text/javascript"" src=""https://www.google.com/books/jsapi.js""></script>
+                <script type=""text/javascript"">
+                    google.books.load();
+                    function alertNotFound() {
+                        alert(""could not embed the book!"");
+                    }
+                    function initialize() {
+                        var viewer = new google.books.DefaultViewer(document.getElementById('viewerCanvas'));
+                        viewer.load('[[IDENTIFY]]', alertNotFound);
+                    }
+                    google.books.setOnLoadCallback(initialize);
+                </script>
+            </head>
+            <body>
+                <div id=""viewerCanvas"" style=""width: 100%; min-height: 100%""></div>
+            </body>
+            </html>";
 
             return template.Replace("[[IDENTIFY]]", volumeId)
                           .Replace("{{Book Title Here}}", bookTitle);
@@ -326,18 +301,6 @@ namespace ELibrary.Gutenberg.Services
             return imageUrl;
         }
 
-        private static string TruncateText(string? text, int maxLength)
-        {
-            if (string.IsNullOrEmpty(text)) return string.Empty;
-            if (text.Length <= maxLength) return text;
-
-            var truncated = text.Substring(0, maxLength);
-            var lastSpace = truncated.LastIndexOf(' ');
-            if (lastSpace > 0)
-            {
-                truncated = truncated.Substring(0, lastSpace);
-            }
-            return truncated + "...";
-        }
+       
     }
 }

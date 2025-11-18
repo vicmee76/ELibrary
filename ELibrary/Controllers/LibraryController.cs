@@ -1,5 +1,4 @@
 using ELibrary.Core.Enums;
-using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using ELibrary.Core.Services;
 using ELibrary.Models;
@@ -22,6 +21,8 @@ namespace ELibrary.Controllers
             _libraryCoordinator = libraryCoordinator;
         }
 
+        
+        
         [HttpGet(Name = "search")]
         public async Task<ActionResult<SearchBookResponse>> Search([FromQuery] SearchBookRequest request)
         {
@@ -42,6 +43,9 @@ namespace ELibrary.Controllers
                 return  BadRequest(ex.Message);
             }
         }
+        
+        
+        
         [HttpGet(Name = "searchTopic")]
         public async Task<ActionResult<SearchBookResponse>> SearchTopic([FromQuery] SearchBookByTopicRequest request)
         {
@@ -62,6 +66,9 @@ namespace ELibrary.Controllers
                 return  BadRequest(ex.Message);
             }
         }
+        
+        
+        
         [HttpGet("{id}",Name = "summary")]
         public async Task<ActionResult<BookSummary>> Summary(string id, BookSource source)
         {
@@ -83,6 +90,9 @@ namespace ELibrary.Controllers
                 return  BadRequest(ex.Message);
             }
         }
+        
+        
+        
         [HttpGet("{id}",Name = "book")]
         public async Task<ActionResult<string>> Book(string id, BookSource source)
         {
@@ -103,6 +113,9 @@ namespace ELibrary.Controllers
                 return  BadRequest(ex.Message);
             }
         }
+        
+        
+        
         [HttpGet("{id}",Name = "image")]
         public async Task<ActionResult> Image(string id, BookSource source)
         {

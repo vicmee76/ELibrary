@@ -10,10 +10,15 @@ namespace ELibrary.Core.Services
     public class LibraryCoordinator
     {
         private readonly IEnumerable<ILibraryService> _libraryServices;
+
+
         public LibraryCoordinator(IEnumerable<ILibraryService> libraryServices)
         {
                 _libraryServices = libraryServices;
         }
+
+
+
         public async Task<Response<SearchBookResponse>> SearchBooks(int? page, string searchText)
         {
             var libraryProviders = _libraryServices.ToArray();

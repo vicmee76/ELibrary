@@ -8,6 +8,6 @@ namespace ELibrary.Core.Enums
 {
     public enum BookSource
     {
-        Gutenberg, Google
+        Gutenberg, Google, DOA
     }
 }

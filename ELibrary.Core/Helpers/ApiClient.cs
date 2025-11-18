@@ -1,9 +1,8 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using System.Diagnostics;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Xml;
+using Newtonsoft.Json.Linq;
 using static Newtonsoft.Json.JsonConvert;
 
 namespace ELibrary.Core.Helpers
@@ -37,21 +36,67 @@ namespace ELibrary.Core.Helpers
             {
                 var resp = await _httpClient.GetAsync(url);
                 var responseString = await resp.Content.ReadAsStringAsync();
+
                 if (!resp.IsSuccessStatusCode)
-                {
-                    // Log or throw with the response body for debugging
-                    throw new Exception($"Response status code does not indicate success: {(int)resp.StatusCode} ({resp.ReasonPhrase}). Body: {responseString}");
-                }
+                    throw new Exception(
+                        $"Response status code does not indicate success: {(int)resp.StatusCode} ({resp.ReasonPhrase}). Body: {responseString}");
+
+                if (string.IsNullOrWhiteSpace(responseString) || responseString.Trim() == "[]")
+                    return default!;
+
                 if (responseString.Contains("DOCTYPE"))
-                {
                     return (T)(object)responseString;
+
+                // Not an array: Direct deserialize to T
+                var token = JToken.Parse(responseString);
+                if (token.Type != JTokenType.Array)
+                    return DeserializeObject<T>(responseString);
+                
+                
+                // For DOA Books - return format is different
+                // JSON is an array: Check if T is a List<U>
+                var tType = typeof(T);
+                if (tType.IsGenericType && tType.GetGenericTypeDefinition() == typeof(List<>))
+                {
+                    var elementType = tType.GetGenericArguments()[0];
+                    var listType = typeof(List<>).MakeGenericType(elementType);
+
+                    // Deserialize array to List<U>, then cast to T
+                    var arrayObj = JsonConvert.DeserializeObject(responseString, listType, GetJsonSettings());
+                    return (T)Convert.ChangeType(arrayObj, tType);
                 }
-                return DeserializeObject<T>(responseString);
+                else
+                {
+                    // T isn't a list (e.g., single object or array): Fallback to direct deserialize
+                    return DeserializeObject<T>(responseString);
+                }
+            }
+            catch (JsonSerializationException jsonEx)
+            {
+                throw new Exception(jsonEx.Message);
             }
             catch (Exception e)
             {
                 throw new Exception(e.Message);
             }
+        }
+        
+        
+        // Helper for consistent settings (handles dates, nulls)
+        private static JsonSerializerSettings GetJsonSettings()
+        {
+            return new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore,
+                DateParseHandling = DateParseHandling.DateTimeOffset,  // For "2024-03-30 02:53:16.821"
+                DateFormatHandling = DateFormatHandling.IsoDateFormat
+            };
+        }
+
+        private static T DeserializeObject<T>(string json)
+        {
+            return JsonConvert.DeserializeObject<T>(json, GetJsonSettings());
         }
 
         public async Task<T> PostAsync<T>(string url, object data, Dictionary<string, string> headers = null)

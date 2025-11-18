@@ -1,19 +1,8 @@
 ﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ELibrary.Infrastructure.Models
 {
-    internal class DoaSearchResponseModel
-    {
-        public List<DoaResults> doaResults {  get; set; }
-    }
-
-
-    internal class DoaResults
+    internal class DoaBookResults
     {
         [JsonProperty("uuid")]
         public string Uuid;

@@ -4,6 +4,7 @@ using ELibrary.Core.Interfaces;
 using ELibrary.Core.Services;
 using ELibrary.Filters;
 using ELibrary.Gutenberg.Services;
+using ELibrary.Infrastructure.Services;
 using ELibrary.Infrastruture.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Configuration;
@@ -24,6 +25,7 @@ namespace ELibrary
             builder.Services.AddScoped<IApiClient, ApiClient>();
             builder.Services.AddScoped<ILibraryService, GutendexService>();
             builder.Services.AddScoped<ILibraryService, GoogleService>();
+            builder.Services.AddScoped<ILibraryService, DoaBooksService>();
             builder.Services.AddScoped<LibraryCoordinator>();
 
             builder.Services.AddAuthentication("BasicAuthentication")

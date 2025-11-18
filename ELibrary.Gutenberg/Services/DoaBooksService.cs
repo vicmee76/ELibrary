@@ -5,6 +5,7 @@ using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using ELibrary.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
@@ -16,6 +17,7 @@ namespace ELibrary.Infrastructure.Services
         private readonly IApiClient _client;
         private readonly IConfiguration _config;
         private readonly ILogger<DoaBooksService> _logger;
+        private readonly IMemoryCache _cache;
 
         private readonly string _doaBaseUrl = string.Empty;
         private readonly string _eLibraryBaseUrl = string.Empty;
@@ -24,11 +26,12 @@ namespace ELibrary.Infrastructure.Services
         public BookSource BOOK_SOURCE => BookSource.DOA;
 
 
-        public DoaBooksService(IApiClient client, IConfiguration config, ILogger<DoaBooksService> logger)
+        public DoaBooksService(IApiClient client, IConfiguration config, ILogger<DoaBooksService> logger, IMemoryCache cache)
         {
             _config = config;
             _client = client;
             _logger = logger;
+             _cache = cache;
 
             _doaBaseUrl = _config.GetValue<string>("DoaBooks:BaseUrl") ?? string.Empty;
             _imageUrl = _config.GetValue<string>("DoaBooks:ImageUrl") ?? string.Empty;
@@ -156,7 +159,7 @@ namespace ELibrary.Infrastructure.Services
 
                 _logger.LogInformation(
                     $"DoaBooksService[SearchBooks] : About to get book search result with url: {url}");
-
+                
                 var books = await _client.GetAsync<List<DoaBookResults>>(url);
                 var response = new Response<SearchBookResponse>(
                     new SearchBookResponse

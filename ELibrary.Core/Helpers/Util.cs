@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using System.Text.RegularExpressions;
 
 namespace ELibrary.Core.Helpers
 {
@@ -20,6 +15,20 @@ namespace ELibrary.Core.Helpers
             }
             string noInitials = Regex.Replace(alphanumeric, @"\b[a-zA-Z]\b\s*", "");
             return Regex.Replace(noInitials, @"\s+", "");
+        }
+        
+        public static string TruncateText(string? text, int maxLength)
+        {
+            if (string.IsNullOrEmpty(text)) return string.Empty;
+            if (text.Length <= maxLength) return text;
+
+            var truncated = text.Substring(0, maxLength);
+            var lastSpace = truncated.LastIndexOf(' ');
+            if (lastSpace > 0)
+            {
+                truncated = truncated.Substring(0, lastSpace);
+            }
+            return truncated + "...";
         }
     }
 }

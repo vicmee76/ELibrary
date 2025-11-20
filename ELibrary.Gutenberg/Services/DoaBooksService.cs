@@ -182,7 +182,7 @@ namespace ELibrary.Infrastructure.Services
 
                             Summary = b.Metadata.FirstOrDefault(x => x.Key == Constants.DescriptionKey)?.Value
                                 ?.ToString() ?? string.Empty,
-                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Bitstreams.Where(w => w.MimeType?.ToLower() == "image/jpeg").OrderByDescending(x => x.SizeBytes).FirstOrDefault()?.Uuid}",
+                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Bitstreams.Where(w => w.MimeType?.ToLower() == "image/jpeg").OrderBy(x => x.SizeBytes).FirstOrDefault()?.Uuid}",
                             Source = BOOK_SOURCE,
                         }).ToList() ?? new List<Data>()
                     },

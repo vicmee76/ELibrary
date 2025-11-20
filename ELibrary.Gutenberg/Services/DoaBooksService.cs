@@ -155,7 +155,7 @@ namespace ELibrary.Infrastructure.Services
                 
                 var split = searchText.Split(' ');
                 var query = string.Join("+", split);
-                var url = $"{_doaBaseUrl}/rest/search?query=dc.title:{query}&expand=metadata,bitstreams";
+                var url = $"{_doaBaseUrl}/rest/search?query=dc.title:{query}&offset={page}&limit=20&expand=metadata,bitstreams";
 
                 _logger.LogInformation(
                     $"DoaBooksService[SearchBooks] : About to get book search result with url: {url}");

@@ -155,7 +155,7 @@ namespace ELibrary.Infrastructure.Services
                 
                 var split = searchText.Split(' ');
                 var query = string.Join("+", split);
-                var url = $"{_doaBaseUrl}/rest/search?query=dc.title:{query}&expand=metadata";
+                var url = $"{_doaBaseUrl}/rest/search?query=dc.title:{query}&expand=metadata,bitstreams";
 
                 _logger.LogInformation(
                     $"DoaBooksService[SearchBooks] : About to get book search result with url: {url}");
@@ -182,7 +182,7 @@ namespace ELibrary.Infrastructure.Services
 
                             Summary = b.Metadata.FirstOrDefault(x => x.Key == Constants.DescriptionKey)?.Value
                                 ?.ToString() ?? string.Empty,
-                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Uuid}",
+                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Bitstreams.Where(w => w.MimeType?.ToLower() == "image/jpeg").OrderByDescending(x => x.SizeBytes).FirstOrDefault()?.Uuid}",
                             Source = BOOK_SOURCE,
                         }).ToList() ?? new List<Data>()
                     },

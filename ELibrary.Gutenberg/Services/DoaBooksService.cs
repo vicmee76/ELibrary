@@ -22,6 +22,7 @@ namespace ELibrary.Infrastructure.Services
         private readonly string _doaBaseUrl = string.Empty;
         private readonly string _eLibraryBaseUrl = string.Empty;
         private readonly string _imageUrl = string.Empty;
+        private readonly int _maxResult = 0;
 
         public BookSource BOOK_SOURCE => BookSource.DOA;
 
@@ -35,6 +36,7 @@ namespace ELibrary.Infrastructure.Services
 
             _doaBaseUrl = _config.GetValue<string>("DoaBooks:BaseUrl") ?? string.Empty;
             _imageUrl = _config.GetValue<string>("DoaBooks:ImageUrl") ?? string.Empty;
+            _maxResult = _config.GetValue<int>("DoaBooks:MaxResults", 10);
             _eLibraryBaseUrl = _config.GetValue<string>("ElibraryBaseUrl") ?? string.Empty;
         }
 
@@ -153,20 +155,37 @@ namespace ELibrary.Infrastructure.Services
                 if(string.IsNullOrEmpty(searchText))
                     return new Response<SearchBookResponse>(null, $"Book search text not found", false);
                 
+                var currentPage = page.GetValueOrDefault(1);
+                if (currentPage < 1) currentPage = 1;
+
+                var limit = _maxResult;
+                var offset = (currentPage - 1) * limit;
+                
                 var split = searchText.Split(' ');
                 var query = string.Join("+", split);
-                var url = $"{_doaBaseUrl}/rest/search?query=dc.title:{query}&offset={page}&limit=20&expand=metadata,bitstreams";
+                
+                var url = $"{_doaBaseUrl}/rest/search?query=dc.title:{query}&limit={limit}&offset={offset}&expand=metadata,bitstreams";
 
                 _logger.LogInformation(
                     $"DoaBooksService[SearchBooks] : About to get book search result with url: {url}");
                 
                 var books = await _client.GetAsync<List<DoaBookResults>>(url);
+                
+                var nextPageUrl = books.Count == limit
+                    ? $"{_eLibraryBaseUrl}/books/search?searchText={searchText}&page={currentPage + 1}"
+                    : null;
+
+                var previousPageUrl = currentPage > 1
+                    ? $"{_eLibraryBaseUrl}/books/search?searchText={searchText}&page={currentPage - 1}"
+                    : null;
+                
+                
                 var response = new Response<SearchBookResponse>(
                     new SearchBookResponse
                     {
                         Count = books.Count,
-                        NextPageUrl = string.Empty,
-                        PreviousPageUrl = string.Empty,
+                        NextPageUrl = nextPageUrl,
+                        PreviousPageUrl = previousPageUrl,
                         Data = books.Select(b => new Data
                         {
                             Id = b.Uuid,
@@ -182,7 +201,7 @@ namespace ELibrary.Infrastructure.Services
 
                             Summary = b.Metadata.FirstOrDefault(x => x.Key == Constants.DescriptionKey)?.Value
                                 ?.ToString() ?? string.Empty,
-                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Bitstreams.Where(w => w.MimeType?.ToLower() == "image/jpeg").OrderBy(x => x.SizeBytes).FirstOrDefault()?.Uuid}",
+                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Bitstreams.FirstOrDefault()?.Uuid}",
                             Source = BOOK_SOURCE,
                         }).ToList() ?? new List<Data>()
                     },

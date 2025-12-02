@@ -7,4 +7,5 @@ public class Constants
     public const string DescriptionKey = "dc.description.abstract";
     public const string DownloadKey = "oapen.identifier.downloadUrl";
     public const string ImageSourceKey = "dc.source";
+    public const string ThumbnailBundleName = "THUMBNAIL";
 }

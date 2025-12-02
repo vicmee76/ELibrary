@@ -99,7 +99,7 @@ namespace ELibrary.Infrastructure.Services
                         .Where(s => !string.IsNullOrEmpty(s))
                         .ToList(),
                     Summary = Util.TruncateText(book.Metadata.FirstOrDefault(x => x.Key == Constants.DescriptionKey)?.Value?.ToString(), 200) ?? "No Summary Available",
-                    ImageUrl = _eLibraryBaseUrl + $"/Image/{book.Uuid}",
+                    ImageUrl = _eLibraryBaseUrl + $"/Image/{book.Bitstreams.FirstOrDefault(x => x.BundleName == Constants.ThumbnailBundleName)?.Uuid}",
                     viewLink = ViewBook(pdfLink),
                 };
 
@@ -201,7 +201,7 @@ namespace ELibrary.Infrastructure.Services
 
                             Summary = b.Metadata.FirstOrDefault(x => x.Key == Constants.DescriptionKey)?.Value
                                 ?.ToString() ?? string.Empty,
-                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Bitstreams.FirstOrDefault()?.Uuid}",
+                            ImageUrl = _eLibraryBaseUrl + $"/Image/{b.Bitstreams.FirstOrDefault(x => x.BundleName == Constants.ThumbnailBundleName)?.Uuid}",
                             Source = BOOK_SOURCE,
                         }).ToList() ?? new List<Data>()
                     },

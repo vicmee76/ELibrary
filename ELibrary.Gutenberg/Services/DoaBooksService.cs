@@ -1,14 +1,17 @@
-﻿using ELibrary.Core.Constants;
+﻿using AngleSharp.Html.Parser;
+using ELibrary.Core.Constants;
 using ELibrary.Core.Enums;
 using ELibrary.Core.Helpers;
 using ELibrary.Core.Interfaces;
 using ELibrary.Core.Models;
 using ELibrary.Infrastructure.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Core.Internal.Http;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using System.Net;
 
 namespace ELibrary.Infrastructure.Services
 {
@@ -87,6 +90,11 @@ namespace ELibrary.Infrastructure.Services
 
                 if (string.IsNullOrEmpty(pdfLink))
                     return new Response<BookSummary>(null, $"Book with id {id} not found", false);
+
+                if (pdfLink.Contains("mdpi.com", StringComparison.OrdinalIgnoreCase) /*|| pdfLink.Contains("https://doi.org", StringComparison.OrdinalIgnoreCase) || pdfLink.Contains("dx.doi.org", StringComparison.OrdinalIgnoreCase)*/)
+                {
+                    pdfLink = await GetDownloadPdfLinkAsync(pdfLink);
+                }
                 
                 var summary = new BookSummary
                 {
@@ -248,5 +256,149 @@ namespace ELibrary.Infrastructure.Services
             return html;
         }
 
+        public async Task<string?> GetDownloadPdfLinkAsync(string pdfUrl)
+        {
+            if (pdfUrl.Contains("mdpi.com", StringComparison.OrdinalIgnoreCase))
+            {
+                using var handler = new HttpClientHandler
+                {
+                    AllowAutoRedirect = true,
+                    AutomaticDecompression = System.Net.DecompressionMethods.All
+                };
+
+                using var client = new HttpClient(handler);
+
+                // Required headers to avoid 403
+                client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.5");
+                client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1");
+                client.DefaultRequestHeaders.Add("Referer", "https://www.mdpi.com/");  // IMPORTANT for pdfview
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "none");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-User", "?1");
+
+                client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36"
+                );
+
+                var html = await client.GetStringAsync(pdfUrl);
+
+                var parser = new HtmlParser();
+                var doc = await parser.ParseDocumentAsync(html);
+
+                // 🔍 Find <a> whose text contains "Free Download"
+                var anchor = doc.QuerySelectorAll("a")
+                                .FirstOrDefault(a =>
+                                    a.TextContent.Contains("Free Download", StringComparison.OrdinalIgnoreCase));
+
+                if (anchor == null)
+                    return null;
+
+                var href = anchor.GetAttribute("href");
+                if (href == null)
+                    return null;
+
+                // Make href absolute if needed
+                if (!href.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                {
+                    href = new Uri(new Uri(pdfUrl), href).ToString();
+                }
+
+                return href;
+            }
+            else if(pdfUrl.Contains("https://doi.org", StringComparison.OrdinalIgnoreCase))
+            {
+                // Step 1: Resolve DOI → final publisher URL (with proper headers)
+                string? finalUrl = await ResolveDoiWithRedirectAsync(pdfUrl);
+                if (finalUrl == null) return null;
+
+                // Step 2: Fetch the final page and extract the real PDF link
+                using var handler = new HttpClientHandler
+                {
+                    AllowAutoRedirect = true,
+                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+                };
+                using var client = new HttpClient(handler);
+
+                // 1. CLEAR existing headers
+                client.DefaultRequestHeaders.Clear();
+                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+
+                // 2. ADD essential browser headers
+                client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+                client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.5");
+                client.DefaultRequestHeaders.Add("Referer", "https://direct.mit.edu/"); // Set a referrer from the same site
+
+                // 3. ADD Modern Fetch Metadata Headers (Crucial for Cloudflare/Akamai detection)
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
+                client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "same-origin"); // Often a strong check
+                client.DefaultRequestHeaders.Add("Sec-Fetch-User", "?1");
+                client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1"); // Request secure connection upgrade
+
+
+                var response = await client.GetAsync(finalUrl);
+                response.EnsureSuccessStatusCode();
+                string html = await response.Content.ReadAsStringAsync();
+
+                // Parse the HTML
+                var parser = new AngleSharp.Html.Parser.HtmlParser();
+                var doc = await parser.ParseDocumentAsync(html);
+
+                // Look for any <a> with href ending in .pdf
+                var pdfAnchor = doc.QuerySelectorAll("a")
+                    .FirstOrDefault(a =>
+                    {
+                        var href = a.GetAttribute("href");
+                        return href != null && href.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
+                    });
+
+                if (pdfAnchor == null)
+                    return null;
+
+                var hrefValue = pdfAnchor.GetAttribute("href");
+                if (string.IsNullOrWhiteSpace(hrefValue))
+                    return null;
+
+                // Build absolute URL for URLs like /books/book-pdf/...
+                if (hrefValue.StartsWith("/"))
+                {
+                    // Publisher domain is the redirected page, not DOI domain
+                    // Extract real base domain (e.g., https://direct.mit.edu)
+                    var baseUri = new Uri(doc.BaseUri ?? pdfUrl);
+                    return $"{baseUri.Scheme}://{baseUri.Host}{hrefValue}";
+                }
+
+                return hrefValue;
+            }else if (pdfUrl.Contains("dx.doi.org", StringComparison.OrdinalIgnoreCase))
+            {
+                return "";
+            }
+            return "";
+        }
+
+        private async Task<string?> ResolveDoiWithRedirectAsync(string doiUrl)
+        {
+            using var handler = new HttpClientHandler { AllowAutoRedirect = false };
+            using var client = new HttpClient(handler);
+
+            // Use a clean, single, up-to-date browser User-Agent
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36"
+            );
+            client.DefaultRequestHeaders.Accept.ParseAdd("text/html,application/xhtml+xml");
+
+            var response = await client.GetAsync(doiUrl);
+
+            if (response.Headers.Location != null)
+            {
+                return response.Headers.Location.ToString();
+            }
+
+            return response.StatusCode == System.Net.HttpStatusCode.OK ? doiUrl : null;
+        }
+
+        
     }
 }

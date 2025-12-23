@@ -12,6 +12,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using System.Net;
+using System.Text.Json;
 
 namespace ELibrary.Infrastructure.Services
 {
@@ -25,6 +26,7 @@ namespace ELibrary.Infrastructure.Services
         private readonly string _doaBaseUrl = string.Empty;
         private readonly string _eLibraryBaseUrl = string.Empty;
         private readonly string _imageUrl = string.Empty;
+        private readonly string _rewriteBaseUrl = string.Empty;
         private readonly int _maxResult = 0;
 
         public BookSource BOOK_SOURCE => BookSource.DOA;
@@ -41,6 +43,7 @@ namespace ELibrary.Infrastructure.Services
             _imageUrl = _config.GetValue<string>("DoaBooks:ImageUrl") ?? string.Empty;
             _maxResult = _config.GetValue<int>("DoaBooks:MaxResults", 10);
             _eLibraryBaseUrl = _config.GetValue<string>("ElibraryBaseUrl") ?? string.Empty;
+            _rewriteBaseUrl = _config.GetValue<string>("RewriteBaseUrl") ?? string.Empty;
         }
 
 
@@ -91,9 +94,11 @@ namespace ELibrary.Infrastructure.Services
                 if (string.IsNullOrEmpty(pdfLink))
                     return new Response<BookSummary>(null, $"Book with id {id} not found", false);
 
-                if (pdfLink.Contains("mdpi.com", StringComparison.OrdinalIgnoreCase) /*|| pdfLink.Contains("https://doi.org", StringComparison.OrdinalIgnoreCase) || pdfLink.Contains("dx.doi.org", StringComparison.OrdinalIgnoreCase)*/)
+                if (pdfLink.Contains("mdpi.com", StringComparison.OrdinalIgnoreCase) || pdfLink.Contains("https://doi.org", StringComparison.OrdinalIgnoreCase) || pdfLink.Contains("dx.doi.org", StringComparison.OrdinalIgnoreCase))
                 {
                     pdfLink = await GetDownloadPdfLinkAsync(pdfLink);
+                    if (string.IsNullOrEmpty(pdfLink))
+                        return new Response<BookSummary>(null, $"Book with id {id} not found", false);
                 }
                 
                 var summary = new BookSummary
@@ -307,75 +312,28 @@ namespace ELibrary.Infrastructure.Services
 
                 return href;
             }
-            else if(pdfUrl.Contains("https://doi.org", StringComparison.OrdinalIgnoreCase))
+            else
             {
-                // Step 1: Resolve DOI → final publisher URL (with proper headers)
-                string? finalUrl = await ResolveDoiWithRedirectAsync(pdfUrl);
-                if (finalUrl == null) return null;
+                using var client = new HttpClient();
 
-                // Step 2: Fetch the final page and extract the real PDF link
-                using var handler = new HttpClientHandler
-                {
-                    AllowAutoRedirect = true,
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-                };
-                using var client = new HttpClient(handler);
+                var baseUrl = _rewriteBaseUrl;
+                var requestUrl = baseUrl + Uri.EscapeDataString(pdfUrl);
 
-                // 1. CLEAR existing headers
-                client.DefaultRequestHeaders.Clear();
-                client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+                var json = await client.GetStringAsync(requestUrl);
 
-                // 2. ADD essential browser headers
-                client.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-                client.DefaultRequestHeaders.Add("Accept-Language", "en-US,en;q=0.5");
-                client.DefaultRequestHeaders.Add("Referer", "https://direct.mit.edu/"); // Set a referrer from the same site
+                using var doc = JsonDocument.Parse(json);
 
-                // 3. ADD Modern Fetch Metadata Headers (Crucial for Cloudflare/Akamai detection)
-                client.DefaultRequestHeaders.Add("Sec-Fetch-Dest", "document");
-                client.DefaultRequestHeaders.Add("Sec-Fetch-Mode", "navigate");
-                client.DefaultRequestHeaders.Add("Sec-Fetch-Site", "same-origin"); // Often a strong check
-                client.DefaultRequestHeaders.Add("Sec-Fetch-User", "?1");
-                client.DefaultRequestHeaders.Add("Upgrade-Insecure-Requests", "1"); // Request secure connection upgrade
-
-
-                var response = await client.GetAsync(finalUrl);
-                response.EnsureSuccessStatusCode();
-                string html = await response.Content.ReadAsStringAsync();
-
-                // Parse the HTML
-                var parser = new AngleSharp.Html.Parser.HtmlParser();
-                var doc = await parser.ParseDocumentAsync(html);
-
-                // Look for any <a> with href ending in .pdf
-                var pdfAnchor = doc.QuerySelectorAll("a")
-                    .FirstOrDefault(a =>
-                    {
-                        var href = a.GetAttribute("href");
-                        return href != null && href.EndsWith(".pdf", StringComparison.OrdinalIgnoreCase);
-                    });
-
-                if (pdfAnchor == null)
+                if (!doc.RootElement.TryGetProperty("pdf", out var pdfArray))
                     return null;
 
-                var hrefValue = pdfAnchor.GetAttribute("href");
-                if (string.IsNullOrWhiteSpace(hrefValue))
+                if (pdfArray.GetArrayLength() == 0)
                     return null;
 
-                // Build absolute URL for URLs like /books/book-pdf/...
-                if (hrefValue.StartsWith("/"))
-                {
-                    // Publisher domain is the redirected page, not DOI domain
-                    // Extract real base domain (e.g., https://direct.mit.edu)
-                    var baseUri = new Uri(doc.BaseUri ?? pdfUrl);
-                    return $"{baseUri.Scheme}://{baseUri.Host}{hrefValue}";
-                }
+                var pdfLink = pdfArray[0].GetProperty("link").GetString();
 
-                return hrefValue;
-            }else if (pdfUrl.Contains("dx.doi.org", StringComparison.OrdinalIgnoreCase))
-            {
-                return "";
+                return pdfLink;
             }
-            return "";
+            
         }
 
         private async Task<string?> ResolveDoiWithRedirectAsync(string doiUrl)
